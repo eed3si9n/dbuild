@@ -1,5 +1,6 @@
 import Dependencies._
 import RemoteDepHelper._
+import SbtSupport._
 
 def MyVersion: String = "0.9.20"
 
@@ -23,6 +24,19 @@ scmInfo in ThisBuild := Some(
     url("https://github.com/lightbend-labs/dbuild"),
     "scm:git:git@github.com:lightbend-labs/dbuild.git")
 )
+
+sbtLaunchJarLocation in ThisBuild := (baseDirectory in ThisBuild).value / "target" / "sbt" / "sbt-launch.jar"
+
+sbtLaunchJar in ThisBuild := {
+  val cp = (externalDependencyClasspath in (sbtLauncher, Compile)).value
+  val location = (sbtLaunchJarLocation in ThisBuild).value
+  cp.map(_.data).find(_.getName.startsWith("sbt-launch")) match {
+    case Some(x) =>
+      IO.copyFile(x, location)
+      Seq(location)
+    case None    => sys.error("failed to resolve sbt-launch")
+  }
+}
 
 def SubProj(name: String) = (
   Project(name, file(if (name=="root") "." else name))
@@ -266,5 +280,15 @@ lazy val docs = (
       val file = (siteSourceDirectory in Sphinx).value / "version.py"
       IO.write(file, ("release = '%s'\n" format (version.value)))
     }).value
+  )
+)
+
+lazy val sbtLauncher = (
+  SubProj("sbt-launcher")
+  settings(
+    autoScalaLibrary := false,
+    libraryDependencies += ("org.scala-sbt" % "sbt-launch" % "1.0.0").intransitive,
+    publish := (),
+    publishLocal := ()
   )
 )
