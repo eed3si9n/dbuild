@@ -1,15 +1,15 @@
-import sbt._
-import com.typesafe.sbt.packager.Keys._
-import sbt.Keys._
-import com.typesafe.sbt.SbtNativePackager._
-import scala.concurrent.ExecutionContext.Implicits.global
 import DbuildLauncher.{launcherVersion,uri}
+import com.typesafe.sbt.SbtNativePackager.*
+import com.typesafe.sbt.packager.Keys.*
+import sbt.*
+import sbt.Keys.*
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object Packaging {
 
   lazy val cleanMsg = TaskKey[Unit]("cleanMsg")
 
-  def mapArt[A](key:sbt.TaskKey[_], kind: String) =
+  def mapArt[A](key:sbt.TaskKey[?], kind: String) =
      // cheat a little: by setting the classifier to the version number, we can
      // publish to Ivy the tgz/zip with the full name, like "dbuild-0.8.1.tgz".
      Universal / key / artifact :=
@@ -18,7 +18,7 @@ object Packaging {
           .withExtension(kind)
           .withClassifier(Some(version.value))
 
-  def settings(build:Project, repo:Project): Seq[Setting[_]] =
+  def settings(build:Project, repo:Project): Seq[Setting[?]] =
      SbtSupport.buildSettings ++ Seq(
      organization := "com.typesafe.dbuild",
      name := "dbuild",
@@ -69,7 +69,7 @@ object Packaging {
     if(!tdir.exists) tdir.mkdirs()
     val file = tdir / "dbuild-launcher.jar"
     log.info("Downloading dbuild launcher "+ uri +" to "+ file.getAbsolutePath() +"...")
-    import scala.sys.process._
+    import scala.sys.process.*
     url(uri).#>(file).!
     file -> "bin/dbuild-launcher.jar"
   }
