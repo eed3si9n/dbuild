@@ -17,7 +17,6 @@ import com.amazonaws.Protocol
 import dispatch.classic.{ Logger => _, _ }
 import com.jsuereth.pgp.{ PGP, SecretKey }
 import org.bouncycastle.openpgp.{ PGPSecretKeyRingCollection, PGPSecretKeyRing }
-import org.omg.PortableInterceptor.SUCCESSFUL
 import com.typesafe.dbuild.logging.Logger.prepareLogMsg
 import com.typesafe.dbuild.logging.Logger
 import com.typesafe.dbuild.deploy.Creds.loadCreds

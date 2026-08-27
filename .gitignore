@@ -1,3 +1,8 @@
 target/
 __pycache__/
 docs/src/sphinx/version.py
+.bsp
+.devcontainer
+.metals
+.vscode
+temp/

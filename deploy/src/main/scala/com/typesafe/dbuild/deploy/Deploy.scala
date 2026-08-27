@@ -8,7 +8,6 @@ import com.amazonaws.services.s3.model.PutObjectRequest
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.Protocol
-import org.omg.PortableInterceptor.SUCCESSFUL
 import Creds.loadCreds
 import com.jcraft.jsch.{ IO => sshIO, Logger => _, _ }
 import java.util.Date
