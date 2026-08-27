@@ -1,6 +1,7 @@
 package com.typesafe.dbuild.support.git
 
-import _root_.sbt.Path._
+import sbt.io.Path._
+import sbt.io.syntax._
 import com.typesafe.dbuild.model._
 import com.typesafe.dbuild.project.resolve.ProjectResolver
 import com.typesafe.dbuild.logging.Logger

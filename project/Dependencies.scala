@@ -1,8 +1,10 @@
-import sbt._
-import DbuildLauncher._
+import sbt.*
+import Keys.*
 
 object Dependencies {
 
+  val scala210 = "2.10.7"
+  val scala212 = "2.12.21"
   val mvnVersion = "3.5.2"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.2.1"
@@ -52,9 +54,15 @@ object Dependencies {
 
   def specs2(scala212: Boolean) =
     if (scala212)
-      "org.specs2" %% "specs2-core" % "3.8.8" % "it,test"
+      "org.specs2" %% "specs2-core" % "3.8.8" % "test"
     else
-      "org.specs2" %% "specs2" % "2.1.1" % "it,test"
+      "org.specs2" %% "specs2" % "2.1.1" % "test"
+
+  def specs2It(scala212: Boolean) =
+    if (scala212)
+      "org.specs2" %% "specs2-core" % "3.8.8" % "it"
+    else
+      "org.specs2" %% "specs2" % "2.1.1" % "it"
 
   def dispatch(scala212: Boolean) =
     if (scala212)
@@ -95,16 +103,7 @@ object Dependencies {
     else
       "org.scala-sbt" % "sbt" % v
 
-  // We deal with two separate launchers:
-  // 1) The "sbt-launch.jar" is the regular sbt launcher. we package it in the "build" subproject
-  // as a resource, so that it is available to the running dbuild when it wants to spawn a further sbt.
-  // 2) We use a modified, dbuild-specific modified version in order to launch dbuild. This
-  // is necessary since the Proguard-optimized sbt launcher is unusable as a library. This is the
-  // version herebelow. The dependencies are not always provided, so we handle them like sbt dependencies,
-  // even though they do not really change on scalaversion/sbtversion
-
-  def dbuildLaunchInt(scala212: Boolean, v:String) = launchInt
-  def dbuildLauncher(scala212: Boolean, v:String) = launcher
+  def sbtLauncherInt(scala212: Boolean, v:String) = "org.scala-sbt" % "launcher-interface" % "1.6.2"
 
   // other dependencies that depend on whether scala is 2.10 or 2.12, but are only included in some cases
   def zincIf212(scala212: Boolean, v:String): Option[ModuleID] =
@@ -119,4 +118,6 @@ object Dependencies {
     else
       Some("com.jsuereth" %% "gpg-library" % "0.8.2")
 
+  def scalaXmlAlways =
+    libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 }

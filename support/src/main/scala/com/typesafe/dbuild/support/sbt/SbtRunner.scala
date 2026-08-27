@@ -124,12 +124,9 @@ class SbtRunner(repos: List[xsbti.Repository], globalBase: File, debug: Boolean)
 object SbtRunner {
   // TODO - Configure these somewhere?
   val defaultJavaArgs = Seq(
-    "-XX:+CMSClassUnloadingEnabled",
-    "-XX:+DoEscapeAnalysis",
     "-Xms1536m",
     "-Xmx1536m",
     "-Xss2m",
-    "-XX:MaxPermSize=640m",
     "-XX:ReservedCodeCacheSize=192m"
   )
 

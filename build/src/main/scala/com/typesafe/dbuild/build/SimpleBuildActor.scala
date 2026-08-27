@@ -17,7 +17,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ Future, Promise, ExecutionContext }
 import ExecutionContext.Implicits.global
 import akka.util.Timeout
-import sbt.Path._
 import java.io.File
 import com.typesafe.dbuild.repo.core.GlobalDirs
 import org.apache.maven.execution.BuildFailure
@@ -55,9 +54,7 @@ class SimpleBuildActor(extractor: ActorRef, builder: ActorRef, repository: Repos
       //  After this point, inputConf and its BuildOptions are never used again.
       //
       val result = try {
-        val notifTask = new Notifications(options.defaultNotifications, generalOptions, confName, log)
-        // add further new tasks at the beginning of this list, leave notifications at the end
-        val tasks: Seq[OptionTask] = Seq(new DeployBuild(generalOptions, log), new Comparison(generalOptions, log), notifTask)
+        val tasks: Seq[OptionTask] = Seq(new Comparison(generalOptions, log))
         val projectNames = projects.map { _.name }
         tasks foreach { _.beforeBuild(projectNames) }
         // afterTasks may be called when the build is complete, or when something went wrong.
@@ -74,32 +71,14 @@ class SimpleBuildActor(extractor: ActorRef, builder: ActorRef, repository: Repos
           if (tasks.nonEmpty) futureBuildResult map {
             // >>>> careful with map() on Futures: exceptions must be caught separately!!
             wrapExceptionIntoOutcome[BuildOutcome](".", log) { buildOutcome =>
-              val taskOuts = {
-                val taskOutsWithoutNotif = tasks.diff(Seq(notifTask)) map { t =>
-                  try { // even if one task fails, we move on to the rest
-                    t.afterBuild(rdb, buildOutcome)
-                    (t.id, true)
-                  } catch {
-                    case e:Throwable =>
-                      (t.id, false)
-                  }
-                }
-                // generate an outcome that Notifications can use, with a report from all other tasks
-                val badForNotif = taskOutsWithoutNotif.filter(!_._2).map { _._1 }
-                val outcomeForNotif = if (badForNotif.nonEmpty)
-                  TaskFailed(".", buildOutcome.outcomes, buildOutcome, "Tasks failed: " + badForNotif.mkString(", "))
-                else
-                  buildOutcome
-                // ok, let's concatenate the previous task results with the one from notifications, and proceed with the
-                // calculation of the final global outcome and the final tasks reporting (and possibly an emergency notification,
-                // if that is ever implemented).
-                taskOutsWithoutNotif :+ (try {
-                  notifTask.afterBuild(rdb, outcomeForNotif)
-                  (notifTask.id, true)
+              val taskOuts = tasks map { t =>
+                try { // even if one task fails, we move on to the rest
+                  t.afterBuild(rdb, buildOutcome)
+                  (t.id, true)
                 } catch {
                   case e:Throwable =>
-                    (notifTask.id, false)
-                })
+                    (t.id, false)
+                }
               }
               log.info("---==  Tasks Report ==---")
               val (good, bad) = taskOuts.partition(_._2)

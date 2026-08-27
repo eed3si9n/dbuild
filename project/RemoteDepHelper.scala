@@ -23,7 +23,7 @@ class RemoteDepHelper(p: Project) {
   def dependsOnSbtProvided(ms: SbtDep*): Project = dependsOnSbtP(true, false, ms:_*)
   def dependsOnSbtProvidedOpt(fms: (Boolean, String) => Option[sbt.ModuleID]): Project = {
     p.settings(libraryDependencies ++= {
-      fms(scalaVersion.value.startsWith("2.12"), (sbtVersion in pluginCrossBuild).value) map { d =>
+      fms(scalaVersion.value.startsWith("2.12"), ((pluginCrossBuild / sbtVersion)).value) map { d =>
         d % "provided"
       }
     }.toSeq)
@@ -31,13 +31,19 @@ class RemoteDepHelper(p: Project) {
   def dependsOnSbtProvidedIt(ms: SbtDep*): Project = dependsOnSbtP(true, true, ms:_*)
   def dependsOnSbtP(provided: Boolean, itOnly: Boolean, ms: SbtDep*): Project =
     p.settings(libraryDependencies ++= {
-      val v = (sbtVersion in pluginCrossBuild).value
+      val v = ((pluginCrossBuild / sbtVersion)).value
       val scala212 = scalaVersion.value.startsWith("2.12")
-      ms map { lib =>
+      val cs = ivyConfigurations.value
+      ms.flatMap { lib =>
         val d = lib(scala212, v)
-        if (itOnly && !provided) (d % "it") else
-        if (provided && !itOnly) (d % "provided") else
-        if (provided && itOnly) (d % "it,provided") else d
+        if (itOnly && !provided)
+          if (cs.contains(IntegrationTest)) Some(d % "it")
+          else None
+        else if (provided && !itOnly) Some(d % "provided")
+        else if (provided && itOnly)
+          if (cs.contains(IntegrationTest)) Some(d % "it,provided")
+          else Some(d % "provided")
+        else Some(d)
       }
     })
 }

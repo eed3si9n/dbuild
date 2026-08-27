@@ -1,18 +1,11 @@
 package com.typesafe.dbuild.logging
 
 import akka.actor.{ ActorRef, Actor, Props, PoisonPill, Terminated }
-import sbt.{
-  Level,
-  LogEvent,
-  Success,
-  Log,
-  Trace,
-  SetLevel,
-  SetTrace,
-  SetSuccess,
-  ControlEvent,
-  StackTrace
-}
+import sbt.io.IO
+import sbt.io.Path._
+import sbt.io.syntax._
+import sbt.util.{ Level, LogEvent, Log, Trace, ControlEvent }
+import sbt.internal.util.StackTrace
 
 /** A command to the logging system to log a given event into a particular path. */
 case class LogCmd(path: String, evt: LogEvent, projName: String)
@@ -29,16 +22,12 @@ import Level._
   def success(msg: => String): Unit =
     sendLog(Level.Info, msg)
   def buffer[T](t: => T): T = t // TODO - buffer actor messages....
-  def err(s: => String): Unit =
-    sendLog(Error, s)
-  def out(s: => String): Unit =
-    sendLog(Info, s)
-  def control(event: sbt.ControlEvent.Value, msg: => String): Unit =
+  def control(event: ControlEvent.Value, msg: => String): Unit =
     sendLogEvent(new ControlEvent(event, msg))
-  def logAll(events: Seq[sbt.LogEvent]): Unit = {
+  def logAll(events: Seq[LogEvent]): Unit = {
     events foreach sendLogEvent
   }
-  def log(level: sbt.Level.Value, msg: => String): Unit =
+  def log(level: Level.Value, msg: => String): Unit =
     sendLog(level, msg)
   private def sendLog(level: Level.Value, msg: => String): Unit =
     sendLogEvent(new Log(level, msg))
@@ -84,13 +73,13 @@ trait LogToOutput {
   def log(lo: LogCmd): Unit = lo.evt match {
     case t: Trace =>
       // TODO - Real trace levels...
-      writeLog(sbt.StackTrace.trimmed(t.exception, 1))
+      writeLog(StackTrace.trimmed(t.exception, 1))
     case l: Log if l.level >= level =>
       val sb = new StringBuffer()
       for (line <- l.msg.split("""\n"""")) {
         // if projName, we are more interested in the project name,
         // rather than the error level (unless it is something other than "info")
-        if (lo.projName != "" && l.level == sbt.Level.Info)
+        if (lo.projName != "" && l.level == Level.Info)
           sb append ("[") append (lo.projName) append "] "
         else {
           sb append ("[")
@@ -105,19 +94,18 @@ trait LogToOutput {
   }
 
   def writeLog(in: String): Unit
-  def level: sbt.Level.Value
+  def level: Level.Value
 }
 
 /** An actor that takes LogCmd messages and writes them to a file. */
 class LoggerFileWriteActor(logDir: java.io.File, path: String) extends Actor with LogToOutput {
-  import sbt.Path._
   def logFile = logDir / (ActorLogHelper.cleanPath(path) + ".log")
   def newWriter = {
     val f = logFile
-    sbt.IO touch f
+    IO touch f
     new java.io.FileWriter(f)
   }
-  var level: sbt.Level.Value = Level.Debug
+  var level: Level.Value = Level.Debug
   var output = newWriter
 
   override def postStop() = output.close()
@@ -151,7 +139,6 @@ class LoggerFileWriteActor(logDir: java.io.File, path: String) extends Actor wit
 
 /** An actor that takes LogCmd messages and writes them to a file. */
 class SystemOutLoggerActor(debug: Boolean) extends Actor with LogToOutput {
-import sbt.Path._
   val output = System.out
   val level = if (debug) Level.Debug else Level.Info
 

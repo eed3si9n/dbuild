@@ -16,6 +16,7 @@ import com.typesafe.dbuild.utils.Time.timed
 import com.typesafe.dbuild.utils.TrackedProcessBuilder
 import collection.immutable.SortedMap
 import com.typesafe.dbuild.adapter.Defaults
+import com.typesafe.dbuild.support.sbt.Repositories
 import com.typesafe.config.{ ConfigSyntax, ConfigFactory, ConfigParseOptions }
 import org.rogach.scallop._
 import org.rogach.scallop.exceptions.ScallopException
@@ -224,10 +225,7 @@ class SbtBuildMain extends xsbti.AppMain {
         val repos = if (useLocalResolvers || resolvers.isEmpty)
           localRepos
         else {
-          // getRepositories contains a ListMap.toList, where sbt's definition
-          // of toList is "backing.reverse". So we have to reverse again.
-          val listMap = xsbt.boot.ListMap(resolvers.toSeq.reverse: _*)
-          (new xsbt.boot.ConfigurationParser).getRepositories(listMap)
+          Repositories.parseRepositories(resolvers)
         }
         if (debug) {
           println("Resolvers:")

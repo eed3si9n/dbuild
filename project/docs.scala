@@ -1,4 +1,4 @@
-import sbt.Path.richFile
+import sbt.*
 import sbt.Keys._
 import sbt.Path._
 import sbt.Def
@@ -6,6 +6,7 @@ import sbt.IO
 import sbt.Logger
 import java.io.File
 import sbt.{Setting,PatternFilter,DirectoryFilter}
+
 /*
 import com.typesafe.sbt.SbtSite.site
 import com.typesafe.sbt.SbtGhPages.{ghpages, GhPagesKeys}

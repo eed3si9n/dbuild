@@ -9,6 +9,6 @@ object SbtSupport {
   val buildSettings: Seq[Setting[_]] = Nil
   val settings: Seq[Setting[_]] = buildSettings ++ Seq(
     // The jar is added as a resource, so that the running dbuild can find it and use it to spawn new instances of sbt
-    resourceGenerators in Compile += sbtLaunchJar.taskValue
+    (Compile / resourceGenerators) += sbtLaunchJar.taskValue
   )
 }

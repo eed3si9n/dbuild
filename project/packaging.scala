@@ -12,8 +12,11 @@ object Packaging {
   def mapArt[A](key:sbt.TaskKey[_], kind: String) =
      // cheat a little: by setting the classifier to the version number, we can
      // publish to Ivy the tgz/zip with the full name, like "dbuild-0.8.1.tgz".
-     artifact in (Universal, key) :=
-       (artifact in (Universal, key)).value.copy(`type` = kind, extension = kind, `classifier` = Some(version.value))
+     Universal / key / artifact :=
+       (Universal / key / artifact).value
+          .withType(kind)
+          .withExtension(kind)
+          .withClassifier(Some(version.value))
 
   def settings(build:Project, repo:Project): Seq[Setting[_]] =
      SbtSupport.buildSettings ++ Seq(
@@ -22,7 +25,7 @@ object Packaging {
      maintainer := "Antonio Cunei <antonio.cunei@lightbend.com>",
      packageSummary := "Multi-project builder.",
      packageDescription := """A multi-project builder capable of glueing together a set of related projects.""",
-     name in Universal := name.value + "-" + version.value,
+     Universal / name := name.value + "-" + version.value,
      rpmRelease := "1",
      rpmVendor := "typesafe",
      rpmUrl := Some("https://github.com/lightbend/dbuild"),
@@ -32,7 +35,7 @@ object Packaging {
      // otherwise Universal may end up using outdated files.
      // The command "release" in root will perform a clean, followed by a publish.
 
-     publishArtifact in Compile := false,
+     Compile / publishArtifact := false,
 
      // NB: A clean must be executed before both packageZipTarball and packageZipTarball,
      // otherwise Universal may end up using outdated files.
@@ -52,12 +55,12 @@ object Packaging {
      crossPaths := false
 
   ) ++
-  addArtifact(artifact in (Universal, packageZipTarball), packageZipTarball in Universal) ++
-  addArtifact(artifact in (Universal, packageBin), packageBin in Universal) ++
-  Seq(mappings in Universal ++= Seq(
-        Packaging.makeDBuildProps(target.value, sourceDirectory.value, (scalaVersion in build).value, (version in build).value),
-        Packaging.makeDRepoProps(target.value, sourceDirectory.value, (scalaVersion in build).value, (version in build).value),
-        Packaging.dbuildLauncher(target.value, streams.value.log, (version in build).value)
+  addArtifact(Universal / packageZipTarball / artifact, Universal / packageZipTarball) ++
+  addArtifact(Universal / packageBin / artifact, Universal / packageBin) ++
+  Seq((Universal / mappings) ++= Seq(
+        Packaging.makeDBuildProps(target.value, sourceDirectory.value, ((build / scalaVersion)).value, ((build / version)).value),
+        Packaging.makeDRepoProps(target.value, sourceDirectory.value, ((build / scalaVersion)).value, ((build / version)).value),
+        Packaging.dbuildLauncher(target.value, streams.value.log, ((build / version)).value)
       )
   )
 
