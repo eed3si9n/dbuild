@@ -1,6 +1,5 @@
 import sbt.*
 import Keys.*
-import DbuildLauncher.*
 
 object Dependencies {
 
@@ -105,16 +104,6 @@ object Dependencies {
       "org.scala-sbt" % "sbt" % v
 
   def sbtLauncherInt(scala212: Boolean, v:String) = "org.scala-sbt" % "launcher-interface" % "1.6.2"
-
-  // We deal with two separate launchers:
-  // 1) The "sbt-launch.jar" is the regular sbt launcher. we package it in the "build" subproject
-  // as a resource, so that it is available to the running dbuild when it wants to spawn a further sbt.
-  // 2) We use a modified, dbuild-specific modified version in order to launch dbuild. This
-  // is necessary since the Proguard-optimized sbt launcher is unusable as a library. This is the
-  // version herebelow. The dependencies are not always provided, so we handle them like sbt dependencies,
-  // even though they do not really change on scalaversion/sbtversion
-
-  def dbuildLauncher(scala212: Boolean, v:String) = launcher
 
   // other dependencies that depend on whether scala is 2.10 or 2.12, but are only included in some cases
   def zincIf212(scala212: Boolean, v:String): Option[ModuleID] =

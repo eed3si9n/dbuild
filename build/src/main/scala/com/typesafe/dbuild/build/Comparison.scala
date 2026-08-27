@@ -1,9 +1,7 @@
 package com.typesafe.dbuild.build
 
-import sbt._
-import com.typesafe.dbuild.adapter.Adapter
-import Adapter.{IO,allPaths}
-import Adapter.syntaxio._
+import sbt.io.{ IO, PathFinder }
+import sbt.io.syntax._
 import com.typesafe.dbuild.model._
 import com.typesafe.dbuild.logging.Logger
 import java.io.File
@@ -66,8 +64,8 @@ class Comparison(options: GeneralOptions, log: Logger) extends OptionTask(log) {
               if (badB.isEmpty) {
                 val logLimit = 10
                 // excellent! We just need to compare the jars in dirA and dirB
-                val jarsA = dirA.**("*.jar").get
-                val jarsB = dirB.**("*.jar").get
+                val jarsA = PathFinder(dirA).allPaths.get.filter(_.getName.endsWith(".jar"))
+                val jarsB = PathFinder(dirB).allPaths.get.filter(_.getName.endsWith(".jar"))
                 def checkPaths(x: Seq[String], y: Seq[String], xName: String, yName: String) = {
                   val xNotY = x.diff(y)
                   val ok = xNotY.isEmpty

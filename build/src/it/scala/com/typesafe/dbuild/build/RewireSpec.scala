@@ -1,11 +1,5 @@
 package com.typesafe.dbuild.build
 
-//
-// Warning: This test relies on the "build" module, that is currently only compiled
-// for 0.12/2.9. Therefore, "^^0.12" must be issued before "build/it:test" or "it:test",
-// otherwise this test might be inadvertently skipped.
-//
-
 import com.typesafe.dbuild.logging.{ConsoleLogger, Logger}
 import com.typesafe.dbuild.model._
 import com.typesafe.dbuild.project.build.LocalBuildRunner
@@ -15,6 +9,7 @@ import java.io.File
 import com.typesafe.config.ConfigFactory
 import com.typesafe.dbuild.model.Utils.readValueT
 import com.typesafe.dbuild.model.DBuildConfiguration
+import com.typesafe.dbuild.support.sbt.Repositories
 
 // TDOO - Because this requires the sbt plugin to be published, we have to publsh locally
 // before we can run integration tests.
@@ -28,8 +23,8 @@ object RewireSpec extends Specification {
              |  check-missing: [false, false, false]
              |  cross-version: standard
              |  space: test
-             |  sbt-version: "0.13.18"
-             |  extraction-version: "2.11.1"
+             |  sbt-version: "1.13.0"
+             |  extraction-version: "2.12.21"
              |  projects: [
              |    {
              |      name: InjectionTest
@@ -60,12 +55,10 @@ object RewireSpec extends Specification {
           "localIvy: file:"+System.getProperty("user.home")+"/.ivy2/local, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]",
           "sonatype-snapshots: https://oss.sonatype.org/content/repositories/snapshots",
           "sonatype-releases: https://oss.sonatype.org/content/repositories/releases",
-          "java-annoying-cla-shtuff: http://download.java.net/maven/2/",
           "typesafe-releases: https://repo.typesafe.com/typesafe/releases",
           "typesafe-ivy-releases: https://repo.typesafe.com/typesafe/ivy-releases, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]",
           "typesafe-ivy-snapshots: https://repo.typesafe.com/typesafe/ivy-snapshots, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]",
           "sbt-plugin-releases: https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]",
-          "jgit-repo: http://download.eclipse.org/jgit/maven",
           "scala-fresh-2.10.x: https://repo.typesafe.com/typesafe/scala-fresh-2.10.x/"
         )
         val repoRecords = repoStrings map {
@@ -75,12 +68,7 @@ object RewireSpec extends Specification {
                           case z => sys.error("Internal error, unexpected split result: " + z)
                         }}
 
-        val repos = {
-          val listMap = xsbt.boot.ListMap(repoRecords.toSeq.reverse: _*)
-          // getRepositories contains a ListMap.toList, where sbt's definition
-          // of toList is "backing.reverse". So we have to reverse again.
-          (new xsbt.boot.ConfigurationParser).getRepositories(listMap)
-        }
+        val repos = Repositories.parseRepositories(repoRecords)
 
         val main = new LocalBuildMain(repos, BuildRunOptions(CleanupOptions(), Timeouts(), true, true))
         val outcome = try {

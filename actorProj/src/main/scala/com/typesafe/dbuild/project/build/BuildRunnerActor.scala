@@ -9,9 +9,10 @@ import scala.concurrent.duration._
 import com.typesafe.dbuild.project.resolve.ProjectResolver
 import java.io.File
 import com.typesafe.dbuild.repo.core._
-import sbt.IO
+import sbt.io.{ IO, DirectoryFilter }
+import sbt.io.Path._
+import sbt.io.syntax._
 import com.typesafe.dbuild.project.cleanup.Recycling._
-import sbt.Path._
 import com.typesafe.dbuild.repo.core.GlobalDirs.buildDir
 import com.typesafe.dbuild.project.{ BuildSystem, BuildData }
 import com.typesafe.dbuild.utils.TrackedProcessBuilder
@@ -25,7 +26,7 @@ case class RunBuild(build: RepeatableProjectBuild, outProjects: Seq[Project], ch
 class CleaningBuildActor extends Actor {
   def receive = {
     case target: File =>
-      IO.delete(buildDir(target).*(sbt.DirectoryFilter).get.filter(markedForDeletion))
+      IO.delete(buildDir(target).*(DirectoryFilter).get.filter(markedForDeletion))
       self ! PoisonPill
   }
 }
@@ -36,7 +37,7 @@ class BuildRunnerActor(builder: LocalBuildRunner, target: File, exp: CleanupExpi
   override def preStart() = {
     // Cleanup works in two stages; see ExtractorActor for details.
     // Note that cleanup is performed independently for the extraction and build directories
-    buildDir(target).*(sbt.DirectoryFilter).get.filter(upForDeletion(_, exp)).foreach(prepareForDeletion)
+    buildDir(target).*(DirectoryFilter).get.filter(upForDeletion(_, exp)).foreach(prepareForDeletion)
     // spawn the cleaning actor
     context.actorOf(Props(new CleaningBuildActor)) ! target
   }

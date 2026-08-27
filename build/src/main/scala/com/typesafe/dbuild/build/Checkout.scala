@@ -7,12 +7,14 @@ import com.typesafe.dbuild.project.resolve.AggregateProjectResolver
 import com.typesafe.dbuild.logging.ConsoleLogger
 import com.typesafe.dbuild.project.build.LocalBuildRunner
 import com.typesafe.dbuild.utils.TrackedProcessBuilder
-import sbt.Path._
+import sbt.io.Path._
+import sbt.io.syntax._
 import sys.process._
 import com.typesafe.dbuild.support.sbt.SbtBuildSystem
 import scala.collection.immutable.SortedMap
 import com.typesafe.dbuild.support.sbt.{ SbtRunner, SbtBuildConfig }
 import com.typesafe.dbuild.support.sbt.SbtRunner.SbtFileNames._
+import com.typesafe.dbuild.support.sbt.Repositories
 import com.typesafe.dbuild.logging.Logger
 import java.io.PrintWriter
 
@@ -73,11 +75,7 @@ object Checkout {
             case z => sys.error("Internal error, unexpected split result: " + z)
           }
         }
-        // getRepositories contains a ListMap.toList, where sbt's definition
-        // of toList is "backing.reverse". So we have to reverse again,
-        // and we finally get the needed List[xsbti.Repository]
-        val listMap = xsbt.boot.ListMap(resolversMap.toSeq.reverse: _*)
-        val savedRepos = (new xsbt.boot.ConfigurationParser).getRepositories(listMap)
+        val savedRepos = Repositories.parseRepositories(resolversMap)
 
         val repos = if (useLocalResolvers || savedRepos.isEmpty)
           localRepos

@@ -7,12 +7,13 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import com.typesafe.dbuild.model.{ ProjectBuildConfig, ExtractionConfig, ExtractionFailed, TimedOut }
 import _root_.java.io.File
-import sbt.Path._
+import sbt.io.Path._
+import sbt.io.syntax._
 import ExtractionDirs.projectExtractionDir
 import com.typesafe.dbuild.repo.core.GlobalDirs.extractionDir
 import com.typesafe.dbuild.model.CleanupExpirations
 import com.typesafe.dbuild.project.cleanup.Recycling._
-import sbt.{ IO, DirectoryFilter }
+import sbt.io.{ IO, DirectoryFilter }
 import com.typesafe.dbuild.logging.Logger
 import Logger.prepareLogMsg
 import scala.util.{Success,Failure}

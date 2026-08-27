@@ -4,7 +4,7 @@ import SbtSupport._
 
 def MyVersion: String = "0.9.20"
 
-ThisBuild / scalaVersion := scala210
+ThisBuild / scalaVersion := scala212
 
 // keep Maven Central happy
 ThisBuild / developers := List(
@@ -45,15 +45,15 @@ ThisBuild / version := MyVersion
 ThisBuild / resolvers += Resolver.typesafeIvyRepo("releases")
 ThisBuild / resolvers += "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/"
 
-def skip212 = Seq(
-  (compile / skip) := scalaVersion.value.startsWith("2.12"),
+def skip210 = Seq(
+  (compile / skip) := scalaVersion.value.startsWith("2.10"),
   publish := Def.taskDyn {
     val p = publish.taskValue
-    if (scalaVersion.value.startsWith("2.12")) Def.task {} else Def.task(p.value)
+    if (scalaVersion.value.startsWith("2.10")) Def.task {} else Def.task(p.value)
   }.value,
   publishLocal := Def.taskDyn {
     val p = publishLocal.taskValue
-    if (scalaVersion.value.startsWith("2.12")) Def.task {} else Def.task(p.value)
+    if (scalaVersion.value.startsWith("2.10")) Def.task {} else Def.task(p.value)
   }.value,
   Compile / doc / sources := {
     val theSources = (Compile / doc / sources).value
@@ -68,7 +68,7 @@ def selectSbtVersion =
   (pluginCrossBuild / sbtVersion) := {
     scalaBinaryVersion.value match {
       case "2.10" => "0.13.18"
-      case "2.12" => "1.2.1"
+      case "2.12" => "1.13.0"
       case _      => "2.0.7"
     }
   }
@@ -88,7 +88,7 @@ lazy val root = (project in file("."))
     publishLocal / skip := true,
     crossScalaVersions := Nil,
   )
-  .settings(crossSbtVersions := Seq("0.13.18", "1.2.1"), selectScalaVersion)
+  .settings(crossSbtVersions := Seq("0.13.18", "1.13.0"), selectScalaVersion)
 
 // This subproject only has dynamically
 // generated source files, used to adapt
@@ -161,7 +161,7 @@ lazy val actorLogging = project
   .dependsOnRemote(akkaActor _)
   .dependsOnSbtProvided(sbtLogging, sbtIo, sbtLauncherInt)
   .settings(
-    skip212,
+    skip210,
     selectSbtVersion,
   )
 
@@ -224,7 +224,7 @@ lazy val actorProj = project
   .dependsOn(core, actorLogging, proj)
   .dependsOnSbtProvided(sbtIo, sbtIvy)
   .settings(
-    skip212,
+    skip210,
     selectSbtVersion,
     scalaXmlAlways,
   )
@@ -261,7 +261,7 @@ lazy val supportGit = project
   .dependsOnRemote(mvnEmbedder, mvnWagon, javaMail, jgit)
   .dependsOnSbtProvided(sbtLauncherInt, sbtIvy)
   .settings(
-    skip212,
+    skip210,
     selectSbtVersion,
     scalaXmlAlways,
   )
@@ -284,7 +284,7 @@ lazy val dist = (project in file("dist"))
   .enablePlugins(UniversalPlugin)
   .settings(Packaging.settings(build,repo):_*)
   .settings(
-    skip212,
+    skip210,
     selectSbtVersion,
     scalaXmlAlways,
   )
@@ -306,10 +306,10 @@ lazy val build = project
   .dependsOn(actorProj, support, supportGit, repo, metadata, deploy, proj)
   .dependsOnRemote(aws, uriutil, jsch, oro, scallop, commonsLang)
   .dependsOnRemote(gpgLibIf210 _)
-  .dependsOnSbt(sbtLauncherInt, sbtLogging, sbtIo, sbtIvy, sbtSbt, dbuildLauncher)
+  .dependsOnSbt(sbtLauncherInt, sbtLogging, sbtIo, sbtIvy, sbtSbt)
   .settings(Defaults.itSettings)
   .settings(
-    skip212,
+    skip210,
     selectSbtVersion,
     scalaXmlAlways,
     SbtSupport.settings,

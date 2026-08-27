@@ -18,7 +18,10 @@ object LoggingInterface {
   val Level = sbt.util.Level
   type Logger = sbt.util.Logger
   type LogEvent = sbt.util.LogEvent
+  type Log = sbt.util.Log
+  type Trace = sbt.util.Trace
   val ControlEvent = sbt.util.ControlEvent
+  type ControlEvent = sbt.util.ControlEvent
   val StackTrace = sbt.internal.util.StackTrace
   type BasicLogger = sbt.internal.util.BasicLogger
 }
