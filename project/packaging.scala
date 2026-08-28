@@ -1,4 +1,3 @@
-import DbuildLauncher.{launcherVersion,uri}
 import com.typesafe.sbt.SbtNativePackager.*
 import com.typesafe.sbt.packager.Keys.*
 import sbt.*
@@ -60,19 +59,9 @@ object Packaging {
   Seq((Universal / mappings) ++= Seq(
         Packaging.makeDBuildProps(target.value, sourceDirectory.value, ((build / scalaVersion)).value, ((build / version)).value),
         Packaging.makeDRepoProps(target.value, sourceDirectory.value, ((build / scalaVersion)).value, ((build / version)).value),
-        Packaging.dbuildLauncher(target.value, streams.value.log, ((build / version)).value)
+        SbtSupport.sbtLaunchJar.value.head -> "bin/sbt-launcher.jar",
       )
   )
-
-  def dbuildLauncher(target: File, log: Logger, dbuildVersion: String) = {
-    val tdir = target / "dbuild-launcher"
-    if(!tdir.exists) tdir.mkdirs()
-    val file = tdir / "dbuild-launcher.jar"
-    log.info("Downloading dbuild launcher "+ uri +" to "+ file.getAbsolutePath() +"...")
-    import scala.sys.process.*
-    url(uri).#>(file).!
-    file -> "bin/dbuild-launcher.jar"
-  }
 
   def makeDRepoProps(t: File, src: File, sv: String, v: String): (File, String) = makeProps(t,src,sv,v,"repo","com.typesafe.dbuild.repo.core.SbtRepoMain")
   def makeDBuildProps(t: File, src: File, sv: String, v: String): (File, String) = makeProps(t,src,sv,v,"build","com.typesafe.dbuild.build.SbtBuildMain")
@@ -88,10 +77,10 @@ object Packaging {
 
 [app]
   org: com.typesafe.dbuild
-  name: %s
+  name: %s_3
   version: %s
   class: %s
-  cross-versioned: binary
+  cross-versioned: false
   components: xsbti
 
 [repositories]
